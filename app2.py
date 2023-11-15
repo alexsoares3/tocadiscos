@@ -94,8 +94,7 @@ def get_user_input(live, layout, mensagem):
     global user_input
     user_input = ""
     if mensagem is not None:
-        mensagem_layout_listas(layout,mensagem)
-    live.refresh()
+        mensagem_layout_listas(live,layout,mensagem)
     while True:
         event1 = kb.read_event() 
         if event1.event_type == kb.KEY_DOWN and event1.name == "enter":
@@ -109,7 +108,35 @@ def get_user_input(live, layout, mensagem):
         elif event1.event_type == kb.KEY_DOWN and event1.name != "enter" and len(event1.name) == 1:
             user_input += event1.name
             update_input_panel(live, layout)
+def mensagem_layout_listas(live,layout, mensagem):#Escrever as perguntas no layout
+    layout["listas"].update(
+            Panel(
+                Align.center("\n\n"+mensagem),
+                border_style=tema["panel_border"],
+                title="",
+            )
+    )
+    live.refresh()
     
+def mensagem_layout_input(live,layout, mensagem):#Escrever as perguntas no layout
+    layout["input"].update(
+            Panel(
+                Align.center(""),
+                border_style=tema["panel_border"],
+                title=mensagem,
+            )
+    )
+    live.refresh()
+#live input
+def update_input_panel(live,layout):
+    global live_input
+    global user_input
+    global menu
+    layout["input"].update(
+        Panel(Align.left(user_input, vertical='top'), box=box.ROUNDED, title_align='left', title='Input',border_style=tema["panel_border"],)
+    )
+    live.refresh()
+       
 
     
 #Apresentar lista de artistas
@@ -155,14 +182,6 @@ def listaArtistas(layout):
             border_style=tema["panel_border"],
         )
 
-def mensagem_layout_listas(layout, mensagem):#Escrever as perguntas no layout
-    layout["listas"].update(
-            Panel(
-                Align.center("\n\n"+mensagem),
-                border_style=tema["panel_border"],
-                title="",
-            )
-    )
 def adicionarArtista(live,layout):
     global user_input
     global live_input
@@ -177,11 +196,10 @@ def adicionarArtista(live,layout):
     direitos=get_user_input(live,layout,"Insira os direitos:")
     live.refresh()
     adicionar_artista(nome,nacionalidade,direitos)
-
-    draw_ui(layout)
+    mensagem_layout_listas(live,layout,"Artista adicionado com sucesso!")
+    
     
 
-    live.refresh()
 def listaAlbunsPorID(layout,id):
     lista = lista_albuns(id)
     if lista=="empty":
@@ -241,15 +259,7 @@ def menu_lista_artistas(layout):
         )
         
 
-#live input
-def update_input_panel(live,layout):
-    global live_input
-    global user_input
-    global menu
-    layout["input"].update(
-        Panel(Align.left(user_input, vertical='top'), box=box.ROUNDED, title_align='left', title='Input',border_style=tema["panel_border"],)
-    )
-    live.refresh()
+
 
 #Mainloop
 def main():
@@ -266,22 +276,6 @@ def main():
         while True:
             #live input---------------------------------------------------
             event = kb.read_event()
-            global teste
-            teste=False
-            if live_input and teste:
-                if event.event_type == kb.KEY_DOWN and event.name == "enter" :
-                    user_input = "" 
-                    update_input_panel(live,layout) 
-                elif event.event_type == kb.KEY_DOWN and event.name == "backspace":
-                    # remover do input quando da backspace
-                    user_input = user_input[:-1]
-                    update_input_panel(live,layout) 
-                elif event.event_type == kb.KEY_DOWN and event.name != "enter" and len(event.name)==1:
-                    # adicionar a user input quando escreve
-                    user_input += event.name
-                    update_input_panel(live,layout) 
-            #live input--------------------------------------------------
-
             #opcoes menu-------------------------------------------------
             if menu=="menu_inicial": #opcoes do menu inicial
                 if event.event_type == kb.KEY_DOWN and event.name == 'x': #Lista de Artistas
@@ -294,10 +288,10 @@ def main():
                     adicionarArtista(live,layout)
 
             if menu=="menu_lista_artistas": #opcoes do menu lista de artistas
+                
                 if event.event_type == kb.KEY_DOWN and event.name == 'x': #mostrar albuns de artista por x ID
-                    id=user_input[:-1]
-                    user_input=""
-                    update_input_panel(layout,live) 
+                    mensagem_layout_input(live,layout, "Insira o ID:")
+                    id=get_user_input(live, layout, None)    
                     layout["listas"].update(listaAlbunsPorID(layout,id))
                     live.refresh()
                     event.name=None
