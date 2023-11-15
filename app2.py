@@ -89,7 +89,29 @@ def draw_ui(layout):
     #     Panel(Align.left("", vertical='top'), box=box.ROUNDED,border_style=tema["panel_border"],)
     # )
     return layout
+#receber input user
+def get_user_input(live, layout, mensagem):
+    global user_input
+    user_input = ""
+    if mensagem is not None:
+        mensagem_layout_listas(layout,mensagem)
+    live.refresh()
+    while True:
+        event1 = kb.read_event() 
+        if event1.event_type == kb.KEY_DOWN and event1.name == "enter":
+            final_input=user_input
+            user_input=""
+            update_input_panel(live, layout)
+            return final_input
+        elif event1.event_type == kb.KEY_DOWN and event1.name == "backspace":
+            user_input = user_input[:-1]
+            update_input_panel(live, layout)
+        elif event1.event_type == kb.KEY_DOWN and event1.name != "enter" and len(event1.name) == 1:
+            user_input += event1.name
+            update_input_panel(live, layout)
+    
 
+    
 #Apresentar lista de artistas
 def listaArtistas(layout):
     global menu
@@ -148,7 +170,16 @@ def adicionarArtista(live,layout):
     live_input=True
     # First question
     layout["menu"].update(limpar_menu(layout))
-    mensagem_layout_listas(layout, "Insira o nome do artista:")
+    nome=get_user_input(live,layout,"Insira o nome do artista:")
+    live.refresh()
+    nacionalidade=get_user_input(live,layout,"Insira nacionalidade:")
+    live.refresh()
+    direitos=get_user_input(live,layout,"Insira os direitos:")
+    live.refresh()
+    adicionar_artista(nome,nacionalidade,direitos)
+
+    draw_ui(layout)
+    
 
     live.refresh()
 def listaAlbunsPorID(layout,id):
@@ -235,7 +266,9 @@ def main():
         while True:
             #live input---------------------------------------------------
             event = kb.read_event()
-            if live_input:
+            global teste
+            teste=False
+            if live_input and teste:
                 if event.event_type == kb.KEY_DOWN and event.name == "enter" :
                     user_input = "" 
                     update_input_panel(live,layout) 
