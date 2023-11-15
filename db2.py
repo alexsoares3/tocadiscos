@@ -3,7 +3,7 @@ import os
 import difflib
 
 
-# criar bd dos artistas com os campos necessario
+# verifica se o ficheiro existe, caso nao exista cria bd dos artistas com os campos necessario
 def criar_csv_artistas():
     if os.path.isfile("db_artistas.csv"):
         pass
@@ -14,7 +14,7 @@ def criar_csv_artistas():
             escrever_csv.writerow(campos)
 
 
-# criar bd de albuns com os campos necessario
+# verifica se o ficheiro existe, caso nao exista cria bd de albuns com os campos necessario
 def criar_csv_albuns():
     if os.path.isfile("db_albuns.csv"):
         pass
@@ -32,7 +32,7 @@ def criar_csv_albuns():
             escrever_csv = csv.writer(file, delimiter=",")
             escrever_csv.writerow(campos)
 
-# criar bd dos users com os campos necessario
+# verifica se o ficheiro existe, caso nao exista cria bd dos users com os campos necessario
 def criar_csv_users():
     if os.path.isfile("db_users.csv"):
         pass
@@ -42,36 +42,33 @@ def criar_csv_users():
             escrever_csv = csv.writer(file, delimiter=",")
             escrever_csv.writerow(campos)
         
-
-def adicionar_artista(nome, nacionalidade, direitos_editoriais):  # albuns
+# adicionar artista a db de artistas
+def adicionar_artista(nome, nacionalidade, direitos_editoriais):  
     with open("db_artistas.csv", 'r', newline="",) as arquivo_csv:
-        id_artista = 0
+        
         ler_csv = csv.reader(arquivo_csv)
         # Pule o cabeçalho
         next(ler_csv)
-        # Itere sobre as linhas para encontrar o último ID
-        ultimo_id = None
+        #ID que o primeiro artista vai ter
+        id_artista = 1 
+        # Itere sobre as linhas para encontrar o último ID, se nao encontrar id na primeira linha, define como 1
         for linha in ler_csv:
-            if len(linha)==0:
-                id_artista = 1
-                break
             ultimo_id = linha[0]
-        if id_artista != 1:
-            id_artista = int(ultimo_id)+1
+            if len(linha)==0:
+                break
+            else: id_artista = int(ultimo_id)+1
     campos = [
         id_artista,
         nome,
         nacionalidade,
         direitos_editoriais,
-    ]  # lista_albuns
+    ]
     with open("db_artistas.csv", "a", newline="") as file:
         escrever_csv = csv.writer(file, delimiter=",")
         escrever_csv.writerow(campos)
 
-
-def adicionar_album(
-    id_artista, nome, genero_musical, data_lancamento, unidades_vendidas, preco, musicas
-):
+# adicionar album a db de albuns
+def adicionar_album(id_artista, nome, genero_musical, data_lancamento, unidades_vendidas, preco, musicas):
     lista_musicas = "|".join(musicas)
     campos = [
         id_artista,
@@ -87,7 +84,7 @@ def adicionar_album(
         escrever_csv.writerow(campos)
     atualizar_albuns_artista(id_artista, nome)
 
-
+# ao adicionar album na bd de albums, associa tambem o nome do album ao artista na bd de artistas 
 def atualizar_albuns_artista(id_artista, nomeAlbum):
     with open("db_artistas.csv", "r", newline="") as file:
         ler_csv = csv.reader(file, delimiter=",")
@@ -186,8 +183,6 @@ def lista_artistas():
         lista = []
         for linha in ler_csv:
             lista.append(linha)
-        #for x in lista:
-        #    print(x)
     if len(lista)==0:
         lista="empty"
         return lista
@@ -200,12 +195,9 @@ def lista_albuns(id_artista):
         next(ler_csv) #avanca a primeira linha com o cabecalho
         lista = []
         for linha in ler_csv:
-            if len(linha)==0: break
             if linha[0]==id_artista:
                 lista.append(linha)
-
-    if len(lista)==0:
-        return "empty"
+    if len(lista)==0: return "empty"
     else: return lista
 
 def criar_user(user,password):
@@ -240,7 +232,6 @@ def estatisticas():
             if len(linha)>6:
                 musicas = linha[6].split("|")
                 countMusicas += len(musicas)
-    #print("Artistas "+str(countArtistas)+"\nAlbuns "+str(countAlbuns)+"\nMusicas "+str(countMusicas))
     return countArtistas,countAlbuns,countMusicas      
 
     
@@ -259,3 +250,6 @@ criar_csv_users()
 # lista_autores()
 # lista_albuns("7e8e66b7-ea89-4dad-9bf0-fac7d2005e46")
 # criar_user("alex","123")
+
+#for x in range(20):
+#    adicionar_artista("Alex", "Portuguesa", "DireitosArtista")
