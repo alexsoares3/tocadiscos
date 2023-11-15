@@ -167,7 +167,7 @@ def listaArtistas(layout):
             linha.insert(1,str(id))
             if len(linha)<6:
                 table.add_row(linha[1],linha[2],linha[3],linha[4])
-            else: table.add_row(linha[1],linha[2],linha[3],linha[4],linha[5])
+            else: table.add_row(linha[1],linha[2],linha[3],linha[4],str(int((linha[5].count("|"))+1)))
 
         layout["menu"].update(menu_lista_artistas(layout))    
         return Panel(
@@ -211,19 +211,20 @@ def listaAlbunsPorID(layout,id):
     table = Table(
         show_lines=False,
         box=box.SIMPLE,
-        border_style=tema["panel_border"],
+        border_style=tema["panel_border"]
     )
-    #Nome,Genero Musical,Data de Lancamento,Unidades Vendidas,Preco,Lista de Musicas
+    #Nome,Genero Musical,Data de Lancamento,Unidades Vendidas,Preco,Lista de Musicast
     table.add_column("Nome", justify="center")
     table.add_column("Genero Musical", justify="left",no_wrap=False)
     table.add_column("Data de Lancamento", justify="center" )
     table.add_column("Unidades Vendidas", justify="center", )
+
     table.add_column("Preco", justify="center")
     table.add_column("Lista de Musicas", justify="center")
     for linha in lista:
         if len(linha)<=6:
             table.add_row(linha[1],linha[2],linha[3],linha[4],linha[5])
-        else: table.add_row(linha[1],linha[2],linha[3],linha[4],linha[5],linha[6])
+        else: table.add_row(linha[1],linha[2],linha[3],linha[4]+" Un.",linha[5]+" €",str(int((linha[6].count("|"))+1)))
        
     return Panel(
         Align.center(table),
