@@ -162,12 +162,9 @@ def listaArtistas(layout):
         table.add_column("Albuns", justify="center")
         id=0
         for linha in lista:
-            id+=1
-            #adicionar um ID para trabalhar localmente
-            linha.insert(1,str(id))
-            if len(linha)<6:
-                table.add_row(linha[1],linha[2],linha[3],linha[4])
-            else: table.add_row(linha[1],linha[2],linha[3],linha[4],str(int((linha[5].count("|"))+1)))
+            if len(linha)<5:
+                table.add_row(linha[0],linha[1],linha[2],linha[3])
+            else: table.add_row(linha[0],linha[1],linha[2],linha[3],str(int((linha[4].count("|"))+1)))
 
         layout["menu"].update(menu_lista_artistas(layout))    
         return Panel(
@@ -254,7 +251,7 @@ def menu_lista_artistas(layout):
     menu="menu_lista_artistas"
     if menu!="limpar_menu":
         return Panel(
-            Align.center("\nEscreva um ID e selecione \n     uma das opcoes\n\n(x) Mostrar albuns \n    de x artista\n(y) Remover Artista\n"),
+            Align.center("\n\n\n(x) Mostrar albuns \n    de x artista\n(y) Remover Artista\n"),
             border_style=tema["panel_border"],
             title="MENU",
         )
