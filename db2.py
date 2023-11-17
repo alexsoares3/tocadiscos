@@ -182,11 +182,28 @@ def lista_artistas():
         next(ler_csv) #avanca a primeira linha com o cabecalho
         lista = []
         for linha in ler_csv:
+            linha[3]=calculoDireitosAutorais(linha[0],linha[3])
             lista.append(linha)
     if len(lista)==0:
         lista="empty"
         return lista
     else: return lista
+
+def calculoDireitosAutorais(idArtista,percentagem):
+    #Ir buscar nrAlbuns vendidos, preco
+    total=0
+    with open("db_albuns.csv", "r") as file:
+        ler_csv = csv.reader(file)
+        next(ler_csv) #avanca a primeira linha com o cabecalho
+        for linha in ler_csv:
+            if linha[0]==str(idArtista):
+                total+=float(linha[4])*float(linha[5])
+    direitosAutorais=float(total)*float(percentagem)
+    print(str(direitosAutorais))
+    return str(direitosAutorais)
+
+calculoDireitosAutorais(0.2,1)
+
 
 #devolver lista com todos os albuns de x artista
 def lista_albuns(id_artista):
@@ -232,9 +249,8 @@ def estatisticas():
             if len(linha)>6:
                 musicas = linha[6].split("|")
                 countMusicas += len(musicas)
-    return countArtistas,countAlbuns,countMusicas      
+    return countArtistas,countAlbuns,countMusicas 
 
-    
 
 
 # Testes das funcoes:

@@ -160,11 +160,10 @@ def listaArtistas(layout):
         table.add_column("Nacionalidade", justify="center", style="green" )
         table.add_column("Direitos Editoriais", justify="center", )
         table.add_column("Albuns", justify="center")
-        id=0
         for linha in lista:
             if len(linha)<5:
-                table.add_row(linha[0],linha[1],linha[2],linha[3])
-            else: table.add_row(linha[0],linha[1],linha[2],linha[3],str(int((linha[4].count("|"))+1)))
+                table.add_row(linha[0],linha[1],linha[2],linha[3]+"€")
+            else: table.add_row(linha[0],linha[1],linha[2],linha[3]+"€",str(int((linha[4].count("|"))+1)))
 
         layout["menu"].update(menu_lista_artistas(layout))    
         return Panel(
