@@ -47,16 +47,18 @@ def adicionar_artista(nome, nacionalidade, direitos_editoriais):
     with open("db_artistas.csv", 'r', newline="",) as arquivo_csv:
         
         ler_csv = csv.reader(arquivo_csv)
-        # Pule o cabeçalho
+        # avanca a primeira linha com o cabecalho
         next(ler_csv)
         #ID que o primeiro artista vai ter
         id_artista = 1 
-        # Itere sobre as linhas para encontrar o último ID, se nao encontrar id na primeira linha, define como 1
+        # Itera sobre as linhas para encontrar o ultimo ID, se nao encontrar id na primeira linha, define como 1
         for linha in ler_csv:
-            ultimo_id = linha[0]
-            if len(linha)==0:
+            if linha==[]:
                 break
-            else: id_artista = int(ultimo_id)+1
+            else:
+                ultimo_id = linha[0] 
+                id_artista = int(ultimo_id)+1
+            
     campos = [
         id_artista,
         nome,
@@ -202,8 +204,6 @@ def calculoDireitosAutorais(idArtista,percentagem):
     print(str(direitosAutorais))
     return str(direitosAutorais)
 
-calculoDireitosAutorais(0.2,1)
-
 
 #devolver lista com todos os albuns de x artista
 def lista_albuns(id_artista):
@@ -259,13 +259,13 @@ criar_csv_albuns()
 criar_csv_users()
 #estatisticas()
 # pesquisa("musica", "Mus")
-#adicionar_artista("Alex", "Portuguesa", "DireitosArtista")
+adicionar_artista("Alex", "Portuguesa", "DireitosArtista")
 #adicionar_album("1", "Teste2", "GeneroMusical", "DataLancamento", "1000", "10.99", ["Musica1", "Musica2"])
 # atualizar_albuns_artista("7c2eb476-e660-4b45-a179-40e126d5d153", "TESTE")
 # remover_artista("ddd5b688-f221-4ae4-bbd5-36429b959392")
 # lista_autores()
 # lista_albuns("7e8e66b7-ea89-4dad-9bf0-fac7d2005e46")
-# criar_user("alex","123")
+#criar_user("alex","123")
 
 #for x in range(20):
 #    adicionar_artista("Alex", "Portuguesa", "DireitosArtista")
