@@ -179,7 +179,6 @@ def listaArtistas(layout):
 def adicionarArtista(live,layout):
     global user_input
     user_input = ""
-    # First question
     layout["menu"].update(limpar_menu())
     nome=get_user_input(live,layout,"Insira o nome do artista:")
     live.refresh()
