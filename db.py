@@ -145,6 +145,7 @@ def pesquisa(tipo_pesquisa, search):
     if tipo_pesquisa == "artista":
         with open("db_artistas.csv", "r", newline="") as file:
             ler_csv = csv.reader(file)
+            next(ler_csv)
             linhas = list(ler_csv)
         lista_palavras = [linha[1] for linha in linhas]
         closest_matches = difflib.get_close_matches(
@@ -155,6 +156,7 @@ def pesquisa(tipo_pesquisa, search):
     elif tipo_pesquisa == "album" or tipo_pesquisa == "musica":
         with open("db_albuns.csv", "r", newline="") as file:
             ler_csv = csv.reader(file)
+            next(ler_csv)
             linhas = list(ler_csv)
 
         if tipo_pesquisa == "album":
@@ -258,7 +260,7 @@ criar_csv_artistas()
 criar_csv_albuns()
 criar_csv_users()
 #estatisticas()
-# pesquisa("musica", "Mus")
+pesquisa("musica", "Mus")
 #adicionar_artista("Alex", "Portuguesa", "DireitosArtista")
 #adicionar_album("1", "Teste2", "GeneroMusical", "DataLancamento", "1000", "10.99", ["Musica1", "Musica2"])
 # atualizar_albuns_artista("7c2eb476-e660-4b45-a179-40e126d5d153", "TESTE")

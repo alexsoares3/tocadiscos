@@ -39,7 +39,7 @@ def draw_ui(layout):
     )
     layout["sidebar"].split_column(
         Layout(name="menu"),
-        Layout(name="user")
+        Layout(name="user",size=5)
     )
     layout["header"].update(
             Panel(
@@ -177,8 +177,6 @@ def listaArtistas(layout):
         )
 
 def adicionarArtista(live,layout):
-    global user_input
-    user_input = ""
     layout["menu"].update(limpar_menu())
     nome=get_user_input(live,layout,"Insira o nome do artista:")
     live.refresh()
@@ -187,9 +185,7 @@ def adicionarArtista(live,layout):
     direitos=get_user_input(live,layout,"Insira os direitos:")
     live.refresh()
     adicionar_artista(nome,nacionalidade,direitos)
-    mensagem_layout_listas(live,layout,"Artista adicionado com sucesso!")
-    
-    
+    mensagem_layout_listas(live,layout,"Artista adicionado com sucesso!")   
 
 def listaAlbunsPorID(layout,id):
     lista = lista_albuns(id)
@@ -226,6 +222,10 @@ def listaAlbunsPorID(layout,id):
         title="[#feff6e]Lista de Albuns",
     )
 
+def pesquisar(live,layout,tipo_pesquisa,search):
+    live.refresh()
+
+
 #Mudar opcoes do menu
 def limpar_menu():
     global menu
@@ -239,7 +239,7 @@ def menu_inicial():
     global menu
     menu="menu_inicial"
     return Panel(
-        Align.center("\n\n\n(x) Lista de Artistas\n(y) Adicionar Artista\n\n"),
+        Align.center("\n\n\n(x) Lista de Artistas\n(y) Adicionar Artista\n(z) Pesquisar\n"),
         border_style=tema["panel_border"],
         title="MENU",
     )
@@ -251,7 +251,15 @@ def menu_lista_artistas():
             Align.center("\n\n\n(x) Mostrar albuns \n    de x artista\n(y) Remover Artista\n"),
             border_style=tema["panel_border"],
             title="MENU",
-        )
+        )   
+def menu_pesquisar():
+    global menu
+    menu="menu_pesquisar"
+    return Panel(
+        Align.center("\n\n\n(x) Pesquisar por autor\n(y) Pesquisar por album\n(z) Pesquisar por musica"),
+        border_style=tema["panel_border"],
+        title="MENU",
+    )
         
 
 
@@ -278,15 +286,29 @@ def main():
                     event.name=None
                 if event.event_type == kb.KEY_DOWN and event.name == 'y':
                     adicionarArtista(live,layout)
+                    event.name=None
+                if event.event_type == kb.KEY_DOWN and event.name == 'z':
+                    layout["menu"].update(menu_pesquisar())
+                    live.refresh()
+                    event.name=None
 
-            if menu=="menu_lista_artistas": #opcoes do menu lista de artistas
-                
+            if menu=="menu_lista_artistas": #opcoes do menu lista de artistas      
                 if event.event_type == kb.KEY_DOWN and event.name == 'x': #mostrar albuns de artista por x ID
                     mensagem_layout_input(live,layout, "Insira o ID:")
                     id=get_user_input(live, layout, None)    
                     layout["listas"].update(listaAlbunsPorID(layout,id))
                     live.refresh()
                     event.name=None
+
+            if menu=="menu_pesquisar": #opcoes do menu lista de artistas 
+                if event.event_type == kb.KEY_DOWN and event.name == 'x':
+                    search=get_user_input(live,layout,"Qual o autor a pesquisar?")
+                    pesquisar(live,layout,"artista",search)
+                    live.refresh()
+                if event.event_type == kb.KEY_DOWN and event.name == 'y':
+                    pass
+                if event.event_type == kb.KEY_DOWN and event.name == 'z':
+                    pass
             
             if event.event_type == kb.KEY_DOWN and event.name == 'q': #(q=Fechar)
                 break
