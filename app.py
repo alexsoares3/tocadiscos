@@ -39,7 +39,7 @@ def draw_ui(layout):
     )
     layout["sidebar"].split_column(
         Layout(name="menu"),
-        Layout(name="user",size=5)
+        Layout(name="indicar",size=5)
     )
     layout["header"].update(
             Panel(
@@ -56,11 +56,11 @@ def draw_ui(layout):
                 border_style=tema["panel_border"],
             )
     )
-    layout["user"].update(
+    layout["indicar"].update(
             Panel(
-                Align.center("\n\n\nUtilizador: Teste\nTipo: Teste"),
+                Align.center(""),
                 border_style=tema["panel_border"],
-                title="Utilizador",
+                title="Indicacoes",
             )
     )
     layout["menu"].update(menu_inicial())
@@ -90,13 +90,14 @@ def get_user_input(live, layout, mensagem):
     global user_input
     user_input = ""
     if mensagem is not None:
-        mensagem_layout_listas(live,layout,mensagem)
+        mensagem_layout_indicar(live,layout,mensagem)
     while True:
         event1 = kb.read_event() 
         if event1.event_type == kb.KEY_DOWN and event1.name == "enter": #define o input final quando clica no enter
             final_input=user_input
             user_input=""
             update_input_panel(live, layout)
+            mensagem_layout_indicar(live,layout, None)
             return final_input
         elif event1.event_type == kb.KEY_DOWN and event1.name == "backspace": #apagar quando clica no backspace
             user_input = user_input[:-1]
@@ -105,26 +106,25 @@ def get_user_input(live, layout, mensagem):
             user_input += event1.name
             update_input_panel(live, layout)
 
-def mensagem_layout_listas(live,layout, mensagem):#Escrever as perguntas no layout
-    layout["listas"].update(
-            Panel(
-                Align.center("\n\n"+mensagem),
-                border_style=tema["panel_border"],
-                title="",
-            )
-    )
+def mensagem_layout_indicar(live,layout, mensagem):#Escrever as perguntas no layout
+    if mensagem is not None:
+        layout["indicar"].update(
+                Panel(
+                    Align.center(mensagem),
+                    border_style=tema["panel_border"],
+                    title="Indicacoes",
+                )
+        )
+    else:
+        layout["indicar"].update(
+                Panel(
+                    Align.center(""),
+                    border_style=tema["panel_border"],
+                    title="Indicacoes",
+                )
+        )
     live.refresh()
     
-def mensagem_layout_input(live,layout, mensagem): #Escrever as perguntas no layout input
-    layout["input"].update(
-            Panel(
-                Align.center(""),
-                border_style=tema["panel_border"],
-                title=mensagem,
-            )
-    )
-    live.refresh()
-
 #escrever input no painel 
 def update_input_panel(live,layout):
     global user_input
@@ -133,9 +133,7 @@ def update_input_panel(live,layout):
         Panel(Align.left(user_input, vertical='top'), box=box.ROUNDED, title_align='left', title='Input',border_style=tema["panel_border"],)
     )
     live.refresh()
-       
-
-    
+          
 #Apresentar lista de artistas
 def listaArtistas(layout):
     global menu
@@ -163,38 +161,55 @@ def listaArtistas(layout):
                 table.add_row(linha[0],linha[1],linha[2],linha[3]+"€")
             else: table.add_row(linha[0],linha[1],linha[2],linha[3]+"€",str(int((linha[4].count("|"))+1)))
 
-        layout["menu"].update(menu_lista_artistas())    
+        update_menu(layout,menu_lista_artistas())  
         return Panel(
             Align.center(table),
             border_style=tema["panel_border"],
-            title="[#feff6e]Lista de Artistas",
+            title="[#feff6e]Lista de Artistas"
         )
     else:
-        layout["menu"].update(menu_inicial())
         return Panel(
             Align.center("\n\nAinda nao adicionou nenhum artista!"),
             border_style=tema["panel_border"],
+            title="[#feff6e]Lista de Artistas"
         )
 
 def adicionarArtista(live,layout):
-    layout["menu"].update(limpar_menu())
+    update_menu(layout,limpar_menu())
     nome=get_user_input(live,layout,"Insira o nome do artista:")
     live.refresh()
     nacionalidade=get_user_input(live,layout,"Insira nacionalidade:")
     live.refresh()
-    direitos=get_user_input(live,layout,"Insira os direitos:")
+    direitos=get_user_input(live,layout,"Insira os direitos: (Valor em percentagem)")
     live.refresh()
     adicionar_artista(nome,nacionalidade,direitos)
-    mensagem_layout_listas(live,layout,"Artista adicionado com sucesso!")   
+    mensagem_layout_indicar(live,layout,"Artista adicionado com sucesso!")   
 
-def listaAlbunsPorID(layout,id):
+def removerArtista(live,layout):
+    update_menu(layout,limpar_menu())
+    id_artista=get_user_input(live,layout,"Insira o id do artista\n      a remover")
+    live.refresh()
+    confirmar=get_user_input(live,layout,"Tem a certeza que quer remover esse artista? (s/n) ID:"+id_artista)
+    live.refresh()
+    if confirmar.upper() == "S":
+        if remover_artista(id_artista) == "empty":
+            mensagem_layout_indicar(live,layout, "Nao existe um artista com o ID "+id_artista)
+            update_menu(layout,menu_lista_artistas())
+            update_listas(layout,listaArtistas(layout))
+            live.refresh()
+            return
+        remover_artista(id_artista)
+        mensagem_layout_indicar(live,layout, "Artista foi removido")
+        update_menu(layout,menu_lista_artistas())
+        update_listas(layout,listaArtistas(layout))
+        live.refresh()
+    
+
+def gerirArtista(layout,id):
     lista = lista_albuns(id)
-    if lista=="empty":
-        layout["menu"].update(menu_inicial())
-        return Panel(
-            Align.center("\n\nEsse artista nao tem albuns ou inseriu um ID invalido!"),
-            border_style=tema["panel_border"],
-        )
+    if lista=="empty" :
+        return "empty"
+
     table = Table(
         show_lines=False,
         box=box.SIMPLE,
@@ -214,7 +229,7 @@ def listaAlbunsPorID(layout,id):
             table.add_row(linha[1],linha[2],linha[3],linha[4],linha[5])
         else: table.add_row(linha[1],linha[2],linha[3],linha[4]+" Un.",linha[5]+" €",str(int((linha[6].count("|"))+1)))
 
-    layout["menu"].update(limpar_menu())
+    update_menu(layout,limpar_menu())
 
     return Panel(
         Align.center(table),
@@ -222,11 +237,21 @@ def listaAlbunsPorID(layout,id):
         title="[#feff6e]Lista de Albuns",
     )
 
-def pesquisar(live,layout,tipo_pesquisa,search):
-    live.refresh()
+#def pesquisar(live,layout,tipo_pesquisa,search):
+#    live.refresh()
 
-
+def update_menu(layout,content):
+    layout["menu"].update(content)
+def update_listas(layout,content):
+    layout["listas"].update(content)
 #Mudar opcoes do menu
+def limpar_listas():
+    return Panel(
+        Align.center(""),
+        border_style=tema["panel_border"],
+        title="",
+    )
+    
 def limpar_menu():
     global menu
     menu="limpar_menu"
@@ -239,7 +264,7 @@ def menu_inicial():
     global menu
     menu="menu_inicial"
     return Panel(
-        Align.center("\n\n\n(x) Lista de Artistas\n(y) Adicionar Artista\n(z) Pesquisar\n"),
+        Align.center("\n\n\n(x) Lista de Artistas\n(y) Pesquisar\n"),
         border_style=tema["panel_border"],
         title="MENU",
     )
@@ -248,10 +273,27 @@ def menu_lista_artistas():
     menu="menu_lista_artistas"
     if menu!="limpar_menu":
         return Panel(
-            Align.center("\n\n\n(x) Mostrar albuns \n    de x artista\n(y) Remover Artista\n"),
+            Align.center("\n\n\n(x) Gerir/Mostrar albuns \n    de artista\n(y) Adicionar Artista\n(z) Remover Artista\n"),
             border_style=tema["panel_border"],
             title="MENU",
-        )   
+        )
+def menu_gerir_artista():
+    global menu
+    menu="menu_gerir_artista"
+    return Panel(
+        Align.center("\n\n\n(x) Gerir Album\n(y) Adicionar Album\n(z) Remover Album\n"),
+        border_style=tema["panel_border"],
+        title="MENU",
+    )
+def menu_gerir_album():
+    global menu
+    menu="menu_gerir_album"
+    return Panel(
+        Align.center("\n\n\n(x) Adicionar Musica\n(y) Remover Musica\n"),
+        border_style=tema["panel_border"],
+        title="MENU",
+    )
+   
 def menu_pesquisar():
     global menu
     menu="menu_pesquisar"
@@ -261,8 +303,6 @@ def menu_pesquisar():
         title="MENU",
     )
         
-
-
 
 #Mainloop
 def main():
@@ -280,30 +320,53 @@ def main():
             #opcoes menu-------------------------------------------------
             if menu=="menu_inicial": #opcoes do menu inicial
                 if event.event_type == kb.KEY_DOWN and event.name == 'x': #Lista de Artistas
-                    layout["listas"].update(listaArtistas(layout))
+                    update_listas(layout,listaArtistas(layout))
                     user_input="" 
                     live.refresh()
                     event.name=None
                 if event.event_type == kb.KEY_DOWN and event.name == 'y':
-                    adicionarArtista(live,layout)
-                    event.name=None
-                if event.event_type == kb.KEY_DOWN and event.name == 'z':
-                    layout["menu"].update(menu_pesquisar())
+                    update_menu(layout,menu_pesquisar())
                     live.refresh()
                     event.name=None
 
             if menu=="menu_lista_artistas": #opcoes do menu lista de artistas      
-                if event.event_type == kb.KEY_DOWN and event.name == 'x': #mostrar albuns de artista por x ID
-                    mensagem_layout_input(live,layout, "Insira o ID:")
-                    id=get_user_input(live, layout, None)    
-                    layout["listas"].update(listaAlbunsPorID(layout,id))
+                if event.event_type == kb.KEY_DOWN and event.name == 'x': #gerir x artista
+                    mensagem_layout_indicar(live,layout, "Insira o ID")
+                    id=get_user_input(live, layout, None) 
+                    if gerirArtista(layout,id) is not "empty":   
+                        update_listas(layout,gerirArtista(layout,id))
+                        update_menu(layout,menu_gerir_artista())
+                    elif check_if_exists(id):
+                        update_menu(layout,menu_gerir_artista())
+                        limpar_listas(layout)
+                    else:
+                        mensagem_layout_indicar(live,layout, "O ID inserido nao existe")
+                        update_menu(layout,menu_lista_artistas())
                     live.refresh()
                     event.name=None
+                if event.event_type == kb.KEY_DOWN and event.name == 'y': #Adicionar artista
+                    adicionarArtista(live,layout)
+                    event.name=None
+                if event.event_type == kb.KEY_DOWN and event.name == 'z': #Remover artista
+                    removerArtista(live,layout)
+                    event.name=None
+
+            if menu=="menu_gerir_artista": #opcoes do menu lista de artistas      
+                if event.event_type == kb.KEY_DOWN and event.name == 'x': #gerir album
+                    event.name=None
+                    pass
+                if event.event_type == kb.KEY_DOWN and event.name == 'x': #adicionar album
+                    event.name=None
+                    pass
+                if event.event_type == kb.KEY_DOWN and event.name == 'x': #remover album
+                    event.name=None
+                    pass
+            
 
             if menu=="menu_pesquisar": #opcoes do menu lista de artistas 
                 if event.event_type == kb.KEY_DOWN and event.name == 'x':
                     search=get_user_input(live,layout,"Qual o autor a pesquisar?")
-                    pesquisar(live,layout,"artista",search)
+                    #pesquisar(live,layout,"artista",search)
                     live.refresh()
                 if event.event_type == kb.KEY_DOWN and event.name == 'y':
                     pass
@@ -314,7 +377,6 @@ def main():
                 break
             if event.event_type == kb.KEY_DOWN and event.name == 't': #(t=pagina inicial)
                 user_input = ""
-                
                 menu="menu_inicial"
                 draw_ui(layout)
                 live.refresh()

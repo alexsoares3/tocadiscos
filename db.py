@@ -8,7 +8,13 @@ def criar_csv_artistas():
     if os.path.isfile("db_artistas.csv"):
         pass
     else:
-        campos = ["ID", "Nome", "Nacionalidade", "Direitos Editoriais", "Albuns"]
+        campos = [
+            "ID", 
+            "Nome", 
+            "Nacionalidade", 
+            "Direitos Editoriais", 
+            "Albuns"
+        ]
         with open("db_artistas.csv", "w", newline="") as file:
             escrever_csv = csv.writer(file, delimiter=",")
             escrever_csv.writerow(campos)
@@ -31,6 +37,21 @@ def criar_csv_albuns():
         with open("db_albuns.csv", "w", newline="") as file:
             escrever_csv = csv.writer(file, delimiter=",")
             escrever_csv.writerow(campos)
+# verifica se o ficheiro existe, caso nao exista cria bd de musicas com os campos necessario
+def criar_csv_musicas():
+    if os.path.isfile("db_musicas.csv"):
+        pass
+    else:
+        campos = [
+            "ID_Artista",
+            "Nome_Album",
+            "ID",
+            "Nome",
+            "file_path"
+        ]
+        with open("db_musicas.csv", "w", newline="") as file:
+            escrever_csv = csv.writer(file, delimiter=",")
+            escrever_csv.writerow(campos)
 
 # verifica se o ficheiro existe, caso nao exista cria bd dos users com os campos necessario
 def criar_csv_users():
@@ -41,6 +62,18 @@ def criar_csv_users():
         with open("db_users.csv", "w", newline="") as file:
             escrever_csv = csv.writer(file, delimiter=",")
             escrever_csv.writerow(campos)
+def criar_pasta_artistas():
+    nome_pasta = "artistas"
+    # obter caminho da pasta atual
+    pasta_atual = os.getcwd()
+
+    # criar caminho completo para a pasta
+    caminho_pasta = os.path.join(pasta_atual,nome_pasta)
+
+    # verificar se a pasta existe
+    if not os.path.exists(caminho_pasta):
+        # criar pasta
+        os.makedirs(caminho_pasta)
         
 # adicionar artista a db de artistas
 def adicionar_artista(nome, nacionalidade, direitos_editoriais):  
@@ -69,6 +102,19 @@ def adicionar_artista(nome, nacionalidade, direitos_editoriais):
         escrever_csv = csv.writer(file, delimiter=",")
         escrever_csv.writerow(campos)
 
+    nome_pasta = nome
+    # obter caminho da pasta atual
+    pasta_atual = os.getcwd()
+
+    # criar caminho completo para a pasta
+    caminho_pasta = os.path.join(pasta_atual,"artistas", nome_pasta)
+
+    # verificar se a pasta existe
+    if not os.path.exists(caminho_pasta):
+        # criar pasta
+        os.makedirs(caminho_pasta)
+
+adicionar_artista("w", "Portuguesa", "20")
 # adicionar album a db de albuns
 def adicionar_album(id_artista, nome, genero_musical, data_lancamento, unidades_vendidas, preco, musicas):
     lista_musicas = "|".join(musicas)
@@ -109,14 +155,17 @@ def remover_artista(id_artista):
         ler_csv = csv.reader(file)
         linhas = list(ler_csv)
     countLinhas = -1
+    checkEmpty=0
     for linha in linhas:
         countLinhas +=1
         if linha[0] == id_artista:
+            checkEmpty+=1
             del linhas[countLinhas]
-
-        with open("db_artistas.csv", "w", newline="") as file:
-            escrever_csv = csv.writer(file)
-            escrever_csv.writerows(linhas)
+    if checkEmpty==0:
+        return "empty"
+    with open("db_artistas.csv", "w", newline="") as file:
+        escrever_csv = csv.writer(file)
+        escrever_csv.writerows(linhas)
     remover_albuns_artista(id_artista)
 
 
@@ -202,8 +251,8 @@ def calculoDireitosAutorais(idArtista,percentagem):
         for linha in ler_csv:
             if linha[0]==str(idArtista):
                 total+=float(linha[4])*float(linha[5])
-    direitosAutorais=float(total)*float(percentagem)
-    print(str(direitosAutorais))
+    direitosAutorais=float(total)*(float(percentagem)/100)
+    #finalText = str(direitosAutorais)+"("+str(percentagem)+"%)"
     return str(direitosAutorais)
 
 
@@ -213,11 +262,15 @@ def lista_albuns(id_artista):
         ler_csv = csv.reader(file)
         next(ler_csv) #avanca a primeira linha com o cabecalho
         lista = []
+        id_existe = False
         for linha in ler_csv:
+            print(linha[0])
             if linha[0]==id_artista:
+                id_existe = True
                 lista.append(linha)
-    if len(lista)==0: return "empty"
+    if len(lista)==0 and id_existe==False: return "empty"
     else: return lista
+
 
 def criar_user(user,password):
     with open("db_users.csv", "r") as file:
@@ -253,14 +306,27 @@ def estatisticas():
                 countMusicas += len(musicas)
     return countArtistas,countAlbuns,countMusicas 
 
+def check_if_exists(id_artista):
+     with open("db_artistas.csv", "r") as file:
+        ler_csv = csv.reader(file)
+        next(ler_csv) #avanca a primeira linha com o cabecalho
+        lista = []
+        for linha in ler_csv:
+            if linha[0]==id_artista:
+                return True
+        return False
 
 
 # Testes das funcoes:
 criar_csv_artistas()
 criar_csv_albuns()
 criar_csv_users()
+criar_csv_musicas()
+criar_pasta_artistas()
+
+
 #estatisticas()
-pesquisa("musica", "Mus")
+#pesquisa("musica", "Mus")
 #adicionar_artista("Alex", "Portuguesa", "DireitosArtista")
 #adicionar_album("1", "Teste2", "GeneroMusical", "DataLancamento", "1000", "10.99", ["Musica1", "Musica2"])
 # atualizar_albuns_artista("7c2eb476-e660-4b45-a179-40e126d5d153", "TESTE")
@@ -269,5 +335,5 @@ pesquisa("musica", "Mus")
 # lista_albuns("7e8e66b7-ea89-4dad-9bf0-fac7d2005e46")
 #criar_user("alex","123")
 
-#for x in range(20):
-#    adicionar_artista("Alex", "Portuguesa", "DireitosArtista")
+#for x in range(15):
+#    adicionar_artista("Alex", "Portuguesa", "10")
