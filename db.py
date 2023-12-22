@@ -1,6 +1,7 @@
 import csv
 import os
 import difflib
+import pygame
 
 
 # verifica se o ficheiro existe, caso nao exista cria bd dos artistas com os campos necessario
@@ -316,6 +317,28 @@ def check_if_exists(id_artista):
                 return True
         return False
 
+#tocar a musica
+def tocar_musica():
+    #vai buscar a musica à base de dados
+    ficheiro = open('db_musica.csv', 'rb')
+    reader = csv.reader(ficheiro)
+    for linha in reader:
+        musica = linha;
+    #inicio do modulo
+    pygame.init()
+    # caminho para a musica
+    pasta_musica = "musicas"
+    # variavel que faz o caminho completo da musica
+    dar_play = [os.path.join(pasta_musica, musica)]
+    # inicia o mixer do pygame
+    pygame.mixer.init()
+    # carrega a musica no pygame
+    pygame.mixer.music.load(dar_play)
+    # inicia a reprodução da musica
+    pygame.mixer.music.play()
+    # faz com que a musica toque até ao fim
+    while pygame.mixer.music.get_busy():
+        pygame.time.Clock().tick(10)
 
 # Testes das funcoes:
 criar_csv_artistas()
