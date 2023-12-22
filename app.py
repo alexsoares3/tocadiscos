@@ -9,7 +9,6 @@ from db import *
 import keyboard as kb
 
 
-
 #cor do programa
 tema = {"panel_border": "red",}
 
@@ -252,9 +251,7 @@ def menu_lista_artistas():
             border_style=tema["panel_border"],
             title="MENU",
         )
-        
-
-
+    
 
 #Mainloop
 def main():
