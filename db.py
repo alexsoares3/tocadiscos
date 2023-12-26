@@ -1,7 +1,6 @@
 import csv
 import os
 import difflib
-import pygame
 
 
 # verifica se o ficheiro existe, caso nao exista cria bd dos artistas com os campos necessario
@@ -36,21 +35,6 @@ def criar_csv_albuns():
             "Lista de Musicas",
         ]
         with open("db_albuns.csv", "w", newline="") as file:
-            escrever_csv = csv.writer(file, delimiter=",")
-            escrever_csv.writerow(campos)
-# verifica se o ficheiro existe, caso nao exista cria bd de musicas com os campos necessario
-def criar_csv_musicas():
-    if os.path.isfile("db_musicas.csv"):
-        pass
-    else:
-        campos = [
-            "ID_Artista",
-            "Nome_Album",
-            "ID",
-            "Nome",
-            "file_path"
-        ]
-        with open("db_musicas.csv", "w", newline="") as file:
             escrever_csv = csv.writer(file, delimiter=",")
             escrever_csv.writerow(campos)
 
@@ -115,7 +99,6 @@ def adicionar_artista(nome, nacionalidade, direitos_editoriais):
         # criar pasta
         os.makedirs(caminho_pasta)
 
-adicionar_artista("w", "Portuguesa", "20")
 # adicionar album a db de albuns
 def adicionar_album(id_artista, nome, genero_musical, data_lancamento, unidades_vendidas, preco, musicas):
     lista_musicas = "|".join(musicas)
@@ -132,6 +115,7 @@ def adicionar_album(id_artista, nome, genero_musical, data_lancamento, unidades_
         escrever_csv = csv.writer(file, delimiter=",")
         escrever_csv.writerow(campos)
     atualizar_albuns_artista(id_artista, nome)
+    
 
 # ao adicionar album na bd de albums, associa tambem o nome do album ao artista na bd de artistas 
 def atualizar_albuns_artista(id_artista, nomeAlbum):
@@ -152,41 +136,106 @@ def atualizar_albuns_artista(id_artista, nomeAlbum):
 
 # remover artista da db_artistas
 def remover_artista(id_artista):
+    # Read the existing data
     with open("db_artistas.csv", "r", newline="") as file:
         ler_csv = csv.reader(file)
+        header = next(ler_csv)  # Save the header
         linhas = list(ler_csv)
-    countLinhas = -1
-    checkEmpty=0
-    for linha in linhas:
-        countLinhas +=1
-        if linha[0] == id_artista:
-            checkEmpty+=1
-            del linhas[countLinhas]
-    if checkEmpty==0:
+
+    # Identify the index of the line to be removed
+    index_a_remover = -1
+    for idx, linha in enumerate(linhas):
+        if linha and linha[0] == id_artista:
+            index_a_remover = idx
+            break
+
+    if index_a_remover == -1:
         return "empty"
+
+    # Remove the line
+    del linhas[index_a_remover]
+
+    # Write back the modified data
     with open("db_artistas.csv", "w", newline="") as file:
         escrever_csv = csv.writer(file)
+        escrever_csv.writerow(header)  # Write back the header
         escrever_csv.writerows(linhas)
-    remover_albuns_artista(id_artista)
 
+    remover_albuns_artista(id_artista)
 
 # remover albuns do artista da db_albuns
 def remover_albuns_artista(id_artista):
     linhas_a_remover = []
+    header = None  # Variable to store the header
+
+    # Read existing data and find lines to remove
     with open("db_albuns.csv", "r", newline="") as file:
-        ler_csv = csv.reader(file)
-        linhas = list(ler_csv)
-    countLinhas = -1
-    for linha in linhas:
-        countLinhas += 1
+        leitor_csv = csv.reader(file)
+        header = next(leitor_csv)  # Save the header
+        linhas = list(leitor_csv)
+
+    # Identify the index of the line to be removed
+    for idx, linha in enumerate(linhas):
         if linha[0] == id_artista:
-            linhas_a_remover.append(countLinhas)
+            linhas_a_remover.append(idx)
+
+    # Remove lines from the data
     for index in reversed(linhas_a_remover):
         del linhas[index]
 
+    # Write back the modified data
     with open("db_albuns.csv", "w", newline="") as file:
-        escrever_csv = csv.writer(file)
-        escrever_csv.writerows(linhas)
+        escritor_csv = csv.writer(file)
+        escritor_csv.writerow(header)  # Write back the header
+        escritor_csv.writerows(linhas)
+
+
+def remover_album(id_artista,nome_album):
+    # Lista para armazenar os dados do CSV
+    dados_csv = []
+    existe = False
+
+    # Lê os dados do arquivo CSV e os armazena na lista dados_csv
+    with open("db_artistas.csv", 'r') as file:
+        ler_csv = csv.DictReader(file)
+        next(ler_csv)
+        dados_csv = list(ler_csv)  # Populate dados_csv with the data read from the file
+    
+    # Procura o álbum a ser removido e o remove da lista
+    for linha in dados_csv:
+        if linha['ID'] == id_artista and nome_album in linha['Albuns']:
+            # Remove o álbum da lista
+            albuns = linha['Albuns'].split('|')
+            albuns.remove(nome_album)
+            linha['Albuns'] = '|'.join(albuns)
+            existe=True
+
+    # Escreve os dados atualizados de volta no arquivo CSV
+    with open("db_artistas.csv", 'w', newline='') as file:
+        campos = ['ID', 'Nome', 'Nacionalidade', 'Direitos Editoriais', 'Albuns']
+        escrever_csv = csv.DictWriter(file, fieldnames=campos)
+        escrever_csv.writeheader()
+        escrever_csv.writerows(dados_csv)
+
+    # Lista para armazenar os dados do CSV
+    dados_csv1 = []
+    # Lê os dados do arquivo CSV e os armazena na lista dados_csv1
+    with open("db_albuns.csv", 'r') as file:
+        ler_csv = csv.DictReader(file)
+        next(ler_csv)
+        dados_csv1 = list(ler_csv)  # Populate dados_csv1 with the data read from the file
+
+    # Cria uma nova lista excluindo a linha com o ID_Artista e Nome correspondentes
+    dados_csv1 = [linha for linha in dados_csv1 if linha['ID_Artista'] != id_artista or linha['Nome'] != nome_album]
+
+    # Escreve os dados atualizados de volta no arquivo CSV
+    with open("db_albuns.csv", 'w', newline='') as file:
+        campos = ['ID_Artista', 'Nome', 'Genero Musical', 'Data de Lancamento', 'Unidades Vendidas', 'Preco', 'Lista de Musicas']
+        escrever_csv = csv.DictWriter(file, fieldnames=campos)
+        escrever_csv.writeheader()
+        escrever_csv.writerows(dados_csv1)
+    if existe == False:
+        return "empty"
 
 #pesquisar por palavras parecidas
 def pesquisa(tipo_pesquisa, search):
@@ -197,11 +246,11 @@ def pesquisa(tipo_pesquisa, search):
             ler_csv = csv.reader(file)
             next(ler_csv)
             linhas = list(ler_csv)
-        lista_palavras = [linha[1] for linha in linhas]
-        closest_matches = difflib.get_close_matches(
-            search, lista_palavras, n=10, cutoff=0.5
-        )
-        resultados = closest_matches
+        for linha in linhas:
+            if linha and len(linha) > 1:
+                palavra = linha[1]
+                if difflib.SequenceMatcher(None, search, palavra).ratio() > 0.5:
+                    resultados.append(linha)
 
     elif tipo_pesquisa == "album" or tipo_pesquisa == "musica":
         with open("db_albuns.csv", "r", newline="") as file:
@@ -209,24 +258,15 @@ def pesquisa(tipo_pesquisa, search):
             next(ler_csv)
             linhas = list(ler_csv)
 
-        if tipo_pesquisa == "album":
-            lista_palavras = [linha[1] for linha in linhas]
-            print(lista_palavras)
-            closest_matches = difflib.get_close_matches(
-                search, lista_palavras, n=15, cutoff=0.5
-            )
-            resultados = closest_matches
+        for linha in linhas:
+            if linha and len(linha) > 1:
+                if tipo_pesquisa == "album":
+                    palavra = linha[1]
+                elif tipo_pesquisa == "musica" and len(linha) > 6:
+                    palavras = linha[6].split("|")
+                    if any(difflib.SequenceMatcher(None, search, palavra).ratio() > 0.5 for palavra in palavras):
+                        resultados.append(linha)
 
-        elif tipo_pesquisa == "musica":
-            lista_palavras = [
-                coluna for linha in linhas for coluna in linha[6].split("|")
-            ]
-            print(lista_palavras)
-            closest_matches = difflib.get_close_matches(
-                search, lista_palavras, n=20, cutoff=0.5
-            )
-
-            resultados = closest_matches
     return resultados
 
 #devolver lista com todos os artistas
@@ -317,34 +357,11 @@ def check_if_exists(id_artista):
                 return True
         return False
 
-#tocar a musica
-def tocar_musica():
-    #vai buscar a musica à base de dados
-    ficheiro = open('db_musica.csv', 'rb')
-    reader = csv.reader(ficheiro)
-    for linha in reader:
-        musica = linha;
-    #inicio do modulo
-    pygame.init()
-    # caminho para a musica
-    pasta_musica = "musicas"
-    # variavel que faz o caminho completo da musica
-    dar_play = [os.path.join(pasta_musica, musica)]
-    # inicia o mixer do pygame
-    pygame.mixer.init()
-    # carrega a musica no pygame
-    pygame.mixer.music.load(dar_play)
-    # inicia a reprodução da musica
-    pygame.mixer.music.play()
-    # faz com que a musica toque até ao fim
-    while pygame.mixer.music.get_busy():
-        pygame.time.Clock().tick(10)
 
 # Testes das funcoes:
 criar_csv_artistas()
 criar_csv_albuns()
 criar_csv_users()
-criar_csv_musicas()
 criar_pasta_artistas()
 
 
