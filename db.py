@@ -364,8 +364,11 @@ def criar_user(user,password):
             escrever_csv.writerow(campos)
 global isLogged
 isLogged = False
+global loggedUser
+loggedUser = ""
 def login_user(user,password):
     global isLogged
+    global loggedUser
     with open(caminho_db_users, "r") as file:
         ler_csv = csv.reader(file)
         next(ler_csv) #avanca a primeira linha com o cabecalho
@@ -373,9 +376,11 @@ def login_user(user,password):
         for linha in ler_csv:
             if len(linha) > 0 and linha[0] == user and linha[1] == password: 
                 isLogged = True
-                print(isLogged)
+                loggedUser = user
                 return True
         return False
+def loggedUserStats():
+    return loggedUser
 
 
 def estatisticas():

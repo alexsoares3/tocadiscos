@@ -79,9 +79,10 @@ def draw_ui(layout):
     return layout
 def stats(layout):
         countArtistas,countAlbuns,countMusicas=estatisticas()
+        loggedUser = loggedUserStats()
         layout["stats"].update(
             Panel(
-                Align.center("\n\n\n\n\n\n\n\n\nArtistas: "+str(countArtistas)+"\nAlbuns: "+str(countAlbuns)+"\nMusicas: "+str(countMusicas)),
+                Align.center("\n\n\n\n\n\n\n\n\nArtistas: "+str(countArtistas)+"\nAlbuns: "+str(countAlbuns)+"\nMusicas: "+str(countMusicas)+"\n\n\n\n\n\nUtilizador: "+loggedUser),
                 border_style=tema["panel_border"],
                 title="Estatisticas",
             )
@@ -445,6 +446,8 @@ def main():
                     password=get_user_input(live,layout, "Insira a palavra passe")
                     if login_user(user,password):
                         mensagem_layout_indicar(live,layout, "Utilizador logado com sucesso!")
+                        stats(layout)
+                        live.refresh()
                     else: mensagem_layout_indicar(live,layout, "Utilizador ou password incorretos!")
                     event.name=None
 
