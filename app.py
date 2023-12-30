@@ -7,7 +7,6 @@ from rich.table import Table
 from rich import box
 from db import *
 import keyboard as kb
-import shutil
 
 
 #cor do programa
@@ -71,20 +70,22 @@ def draw_ui(layout):
                 title="",
             )
     )
-    global countArtistas,countAlbuns,countMusicas
-    countArtistas,countAlbuns,countMusicas=estatisticas()
-    layout["stats"].update(
-            Panel(
-                Align.center("\n\n\n\n\n\n\n\n\nArtistas: "+str(countArtistas)+"\nAlbuns: "+str(countAlbuns)+"\nMusicas: "+str(countMusicas)),
-                border_style=tema["panel_border"],
-                title="Estatisticas",
-            )
-    )
+    
+    stats(layout)
     layout["input"].update(
         Panel(Align.left(user_input, vertical='top'), box=box.ROUNDED, title_align='left', title='Input',border_style=tema["panel_border"],)
     )
     
     return layout
+def stats(layout):
+        countArtistas,countAlbuns,countMusicas=estatisticas()
+        layout["stats"].update(
+            Panel(
+                Align.center("\n\n\n\n\n\n\n\n\nArtistas: "+str(countArtistas)+"\nAlbuns: "+str(countAlbuns)+"\nMusicas: "+str(countMusicas)),
+                border_style=tema["panel_border"],
+                title="Estatisticas",
+            )
+        )
 #receber input user
 def get_user_input(live, layout, mensagem):
     global user_input
@@ -142,10 +143,10 @@ def listaArtistas(layout):
         box=box.SIMPLE,
         border_style=tema["panel_border"],
     )
-    if lista!="empty":
+    if lista!=None:
         #se a lista for maior que 20 aumenta o tamanho do layout para caberem todos os artistas
         #vai ate 52 entradas, depois disso buga o layout
-        if countArtistas>20: layout["main"].size = mainSize+(countArtistas-mainSize)+5
+        #if countArtistas>20: layout["main"].size = mainSize+(countArtistas-mainSize)+5
 
         table.add_column("ID", justify="center")
         table.add_column("Nome", justify="left",no_wrap=False)
@@ -154,11 +155,11 @@ def listaArtistas(layout):
         table.add_column("Albuns", justify="center")
 
         for linha in lista:
-            if len(linha)<5 or linha[4] == "":
+            if linha[4] == "":
                 table.add_row(linha[0],linha[1],linha[2],linha[3]+"€","0")
             elif linha[4] != "" and linha[4].count("|") == 0:
                 table.add_row(linha[0],linha[1],linha[2],linha[3]+"€","1")
-            else: table.add_row(linha[0],linha[1],linha[2],linha[3]+"€",str(int((linha[4].count("|"))+1)))
+            else: table.add_row(linha[0],linha[1],linha[2],linha[3]+"€",str(int((linha[4].count("|")))))
 
 
         update_menu(layout,menu_lista_artistas())  
@@ -186,6 +187,7 @@ def adicionarArtista(live,layout):
     mensagem_layout_indicar(live,layout,"Artista adicionado com sucesso!") 
     update_menu(layout,menu_lista_artistas())
     update_listas(layout,listaArtistas(layout))
+    stats(layout)
     live.refresh()
 
 def removerArtista(live,layout):
@@ -195,7 +197,7 @@ def removerArtista(live,layout):
     confirmar=get_user_input(live,layout,"Tem a certeza que quer remover esse artista? (s/n) ID:"+id_artista)
     live.refresh()
     if confirmar.upper() == "S":
-        if remover_artista(id_artista) == "empty":
+        if remover_artista(id_artista) == None:
             mensagem_layout_indicar(live,layout, "Nao existe um artista com o ID "+id_artista)
             update_menu(layout,menu_lista_artistas())
             update_listas(layout,listaArtistas(layout))
@@ -205,6 +207,7 @@ def removerArtista(live,layout):
         mensagem_layout_indicar(live,layout, "Artista foi removido")
         update_menu(layout,menu_lista_artistas())
         update_listas(layout,listaArtistas(layout))
+        stats(layout)
         live.refresh()
     else:
         mensagem_layout_indicar(live,layout, "Artista nao foi removido")
@@ -225,15 +228,18 @@ def gerirArtista(layout,id):
     table.add_column("Genero Musical", justify="left",no_wrap=False)
     table.add_column("Data de Lancamento", justify="center" )
     table.add_column("Unidades Vendidas", justify="center", )
-
     table.add_column("Preco", justify="center")
-    table.add_column("Lista de Musicas", justify="center")
+    table.add_column("Nr de Musicas", justify="center")
 
-    if lista!="empty" :
+    if lista!=None :
         for linha in lista:
-            if len(linha)<=6:
-                table.add_row(linha[1],linha[2],linha[3],linha[4],linha[5])
-            else: table.add_row(linha[1],linha[2],linha[3],linha[4]+" Un.",linha[5]+" €",str(int((linha[6].count("|"))+1)))
+            if linha[6] == "":
+                countMusicas = "0"
+            else:
+                musicas = linha[6].split("|")
+                print(musicas)
+                countMusicas = str(len(musicas))
+            table.add_row(linha[1],linha[2],linha[3],linha[4]+" Un.",linha[5]+" €",countMusicas)
 
     update_menu(layout,limpar_menu())
 
@@ -264,6 +270,7 @@ def adicionarAlbum(live,layout,id_artista):
     mensagem_layout_indicar(live,layout,"Album adicionado com sucesso!") 
     update_listas(layout,gerirArtista(layout,id_artista))
     update_menu(layout,menu_gerir_artista())
+    stats(layout)
     live.refresh()
 
 def removerAlbum(live,layout,id_artista):
@@ -273,7 +280,7 @@ def removerAlbum(live,layout,id_artista):
     confirmar=get_user_input(live,layout,"Tem a certeza que quer remover esse album? (s/n) ID:"+nome_album)
     live.refresh()
     if confirmar.upper() == "S":
-        if remover_album(id_artista,nome_album) == "empty":
+        if remover_album(id_artista,nome_album) == None:
             mensagem_layout_indicar(live,layout, "Nao existe um album com o nome "+nome_album)
             update_listas(layout,gerirArtista(layout,id_artista))
             update_menu(layout,menu_gerir_artista())
@@ -283,11 +290,54 @@ def removerAlbum(live,layout,id_artista):
         mensagem_layout_indicar(live,layout, "Album foi removido")
         update_listas(layout,gerirArtista(layout,id_artista))
         update_menu(layout,menu_gerir_artista())
+        stats(layout)
         live.refresh()
     else:
         mensagem_layout_indicar(live,layout, "Album nao foi removido")
         update_menu(layout,menu_lista_artistas())
         live.refresh()
+
+def pesquisar(tipo_pesquisa,search):
+    lista = pesquisa(tipo_pesquisa, search)
+    if lista == None:
+        return None
+    table = Table(
+        show_lines=False,
+        box=box.SIMPLE,
+        border_style=tema["panel_border"]
+    )
+    if tipo_pesquisa == "artista":
+        table.add_column("ID", justify="center")
+        table.add_column("Nome", justify="left",no_wrap=False)
+        table.add_column("Nacionalidade", justify="center", style="green" )
+        table.add_column("Direitos Editoriais", justify="center", )
+        table.add_column("Albuns", justify="center")
+        if lista!=None :
+            for linha in lista:
+                if linha[4] == "":
+                    table.add_row(linha[0],linha[1],linha[2],linha[3]+"€","0")
+                elif linha[4] != "" and linha[4].count("|") == 0:
+                    table.add_row(linha[0],linha[1],linha[2],linha[3]+"€","1")
+                else: table.add_row(linha[0],linha[1],linha[2],linha[3]+"€",str(int((linha[4].count("|")))))
+    elif tipo_pesquisa == "album" or tipo_pesquisa == "musica":
+        #ID_Artista,Nome,Genero Musical,Data de Lancamento,Unidades Vendidas,Preco,Lista de Musicas
+        table.add_column("ID", justify="center")
+        table.add_column("Nome", justify="left",no_wrap=False)
+        table.add_column("Genero Musical", justify="center", style="green" )
+        table.add_column("Data de Lancamento", justify="center", )
+        table.add_column("Unidades Vendidas", justify="center")
+        table.add_column("Preco", justify="center")
+        table.add_column("Lista de Musicas", justify="center")
+        if lista!=None :
+            for linha in lista:
+                table.add_row(linha[0],linha[1],linha[2],linha[3],linha[4],linha[5],linha[6])
+    
+
+    return Panel(
+        Align.center(table),
+        border_style=tema["panel_border"],
+        title="[#feff6e]Pesquisa de Artistas",
+    )
 
 
 def update_menu(layout,content):
@@ -315,7 +365,7 @@ def menu_inicial():
     global menu
     menu="menu_inicial"
     return Panel(
-        Align.center("\n\n\n(x) Lista de Artistas\n(y) Pesquisar\n(z) Adicionar Artista"),
+        Align.center("\n\n\n(x) Lista de Artistas\n(y) Pesquisar\n(z) Adicionar Artista\n(a) Login\n(b) Registar"),
         border_style=tema["panel_border"],
         title="MENU",
     )
@@ -353,13 +403,13 @@ def menu_pesquisar():
         border_style=tema["panel_border"],
         title="MENU",
     )
-        
-
+       
 #Mainloop
 def main():
     
     global menu
     global user_input
+    
     user_input=""
     
     layout = Layout()
@@ -370,23 +420,39 @@ def main():
             event = kb.read_event()
             #opcoes menu-------------------------------------------------
             if menu=="menu_inicial": #opcoes do menu inicial
-                if event.event_type == kb.KEY_DOWN and event.name == 'x': #Lista de Artistas
+                if event.event_type == kb.KEY_DOWN and (event.name == 'x' or event.name == 'X'): #Lista de Artistas
                     update_listas(layout,listaArtistas(layout))
                     live.refresh()
                     event.name=None
-                if event.event_type == kb.KEY_DOWN and event.name == 'y':
+                if event.event_type == kb.KEY_DOWN and (event.name == 'y' or event.name == 'Y'): #Pesquisar
                     update_menu(layout,menu_pesquisar())
                     live.refresh()
                     event.name=None
-                if event.event_type == kb.KEY_DOWN and event.name == 'z': #Adicionar artista
+                if event.event_type == kb.KEY_DOWN and (event.name == 'z' or event.name == 'Z'): #Adicionar artista
                     adicionarArtista(live,layout)
+                    event.name=None
+                if event.event_type == kb.KEY_DOWN and (event.name == 'b' or event.name == 'B'): #Registar User
+                    user=get_user_input(live,layout, "Insira o nome de utilizador")
+                    password=get_user_input(live,layout, "Insira a palavra passe")
+                    if check_if_exists_user(user):
+                        mensagem_layout_indicar(live,layout, "Ja existe um utilizador com esse nome!")
+                    else:
+                        criar_user(user,password)
+                        mensagem_layout_indicar(live,layout, "Utilizador registado com sucesso!")
+                    event.name=None
+                if event.event_type == kb.KEY_DOWN and (event.name == 'a' or event.name == 'A'): #Logar User
+                    user=get_user_input(live,layout, "Insira o nome de utilizador")
+                    password=get_user_input(live,layout, "Insira a palavra passe")
+                    if login_user(user,password):
+                        mensagem_layout_indicar(live,layout, "Utilizador logado com sucesso!")
+                    else: mensagem_layout_indicar(live,layout, "Utilizador ou password incorretos!")
                     event.name=None
 
             if menu=="menu_lista_artistas": #opcoes do menu lista de artistas       
-                if event.event_type == kb.KEY_DOWN and event.name == 'x': #gerir x artista
-                    mensagem_layout_indicar(live,layout, "Insira o ID")
+                if event.event_type == kb.KEY_DOWN and (event.name == 'x' or event.name == 'X'): #gerir x artista
+                    mensagem_layout_indicar(live,layout, "Insira o ID do artista")
                     id=get_user_input(live, layout, None) 
-                    if check_if_exists(id):   
+                    if check_if_exists_artista(id):   
                         update_listas(layout,gerirArtista(layout,id))
                         update_menu(layout,menu_gerir_artista())
                     else:
@@ -395,40 +461,56 @@ def main():
                     live.refresh()
                     event.name=None
 
-                if event.event_type == kb.KEY_DOWN and event.name == 'y': #Adicionar artista
+                if event.event_type == kb.KEY_DOWN and (event.name == 'y' or event.name == 'Y'): #Adicionar artista
                     adicionarArtista(live,layout)
                     event.name=None
 
-                if event.event_type == kb.KEY_DOWN and event.name == 'z': #Remover artista
+                if event.event_type == kb.KEY_DOWN and (event.name == 'z' or event.name == 'Z'): #Remover artista
                     removerArtista(live,layout)
                     event.name=None
 
 
             if menu=="menu_gerir_artista": #opcoes do menu lista de artistas      
-                if event.event_type == kb.KEY_DOWN and event.name == 'x': #gerir album
+                if event.event_type == kb.KEY_DOWN and (event.name == 'x' or event.name == 'X'): #gerir album
                     event.name=None
                     pass
-                if event.event_type == kb.KEY_DOWN and event.name == 'y': #adicionar album
+                if event.event_type == kb.KEY_DOWN and (event.name == 'y' or event.name == 'Y'): #adicionar album
                     event.name=None
                     adicionarAlbum(live,layout,id)
-                if event.event_type == kb.KEY_DOWN and event.name == 'z': #remover album
+                if event.event_type == kb.KEY_DOWN and (event.name == 'z' or event.name == 'Z'): #remover album
                     event.name=None
                     removerAlbum(live,layout,id)
             
 
             if menu=="menu_pesquisar": #opcoes do menu lista de artistas 
-                if event.event_type == kb.KEY_DOWN and event.name == 'x':
-                    search=get_user_input(live,layout,"Qual o autor a pesquisar?")
-                    #pesquisar(live,layout,"artista",search)
-                    live.refresh()
-                if event.event_type == kb.KEY_DOWN and event.name == 'y':
-                    pass
-                if event.event_type == kb.KEY_DOWN and event.name == 'z':
-                    pass
+                if event.event_type == kb.KEY_DOWN and (event.name == 'x' or event.name == 'X'): #pesquisar por artista
+                    search=get_user_input(live,layout,"Qual o artista a pesquisar?")
+                    if pesquisa("artista",search) != None:
+                        update_listas(layout,pesquisar("artista",search))
+                        live.refresh()
+                    else: 
+                        mensagem_layout_indicar(live,layout, "Nenhum resultado encontrado")
+                        live.refresh()
+                if event.event_type == kb.KEY_DOWN and (event.name == 'y' or event.name == 'Y'): #pesquisar por album
+                    search=get_user_input("Qual o album a pesquisar?")
+                    if pesquisa("album",search) != None:
+                        update_listas(layout,pesquisar("album",search))
+                        live.refresh()
+                    else: 
+                        mensagem_layout_indicar(live,layout, "Nenhum resultado encontrado")
+                        live.refresh()
+                if event.event_type == kb.KEY_DOWN and (event.name == 'z' or event.name == 'Z'): #pesquisar por musica
+                    search=get_user_input(live,layout,"Qual a musica a pesquisar?")
+                    if pesquisa("musica",search) != None:
+                        update_listas(layout,pesquisar("musica",search))
+                        live.refresh()
+                    else: 
+                        mensagem_layout_indicar(live,layout, "Nenhum resultado encontrado")
+                        live.refresh()
             
-            if event.event_type == kb.KEY_DOWN and event.name == 'q': #(q=Fechar)
+            if event.event_type == kb.KEY_DOWN and (event.name == 'q' or event.name == 'Q'): #(q=Fechar)
                 break
-            if event.event_type == kb.KEY_DOWN and event.name == 't': #(t=pagina inicial)
+            if event.event_type == kb.KEY_DOWN and (event.name == 't' or event.name == 'T'): #(t=pagina inicial)
                 menu="menu_inicial"
                 draw_ui(layout)
                 live.refresh()
@@ -438,7 +520,9 @@ def main():
 
                       
 if __name__ == "__main__":
+    criar_pasta_database()
     criar_csv_artistas()
     criar_csv_albuns()
     criar_csv_users()
+    criar_pasta_artistas()
     main()

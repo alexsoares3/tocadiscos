@@ -2,10 +2,25 @@ import csv
 import os
 import difflib
 
+caminho_db_artistas = "database/db_artistas.csv"
+caminho_db_albuns = "database/db_albuns.csv"
+caminho_db_users = "database/db_users.csv"
 
+def criar_pasta_database():
+    nome_pasta = "database"
+    # obter caminho da pasta atual
+    pasta_atual = os.getcwd()
+
+    # criar caminho completo para a pasta
+    caminho_pasta = os.path.join(pasta_atual,nome_pasta)
+
+    # verificar se a pasta existe
+    if not os.path.exists(caminho_pasta):
+        # criar pasta
+        os.makedirs(caminho_pasta)
 # verifica se o ficheiro existe, caso nao exista cria bd dos artistas com os campos necessario
 def criar_csv_artistas():
-    if os.path.isfile("db_artistas.csv"):
+    if os.path.isfile(caminho_db_artistas):
         pass
     else:
         campos = [
@@ -15,14 +30,14 @@ def criar_csv_artistas():
             "Direitos Editoriais", 
             "Albuns"
         ]
-        with open("db_artistas.csv", "w", newline="") as file:
+        with open(caminho_db_artistas, "w", newline="") as file:
             escrever_csv = csv.writer(file, delimiter=",")
             escrever_csv.writerow(campos)
 
 
 # verifica se o ficheiro existe, caso nao exista cria bd de albuns com os campos necessario
 def criar_csv_albuns():
-    if os.path.isfile("db_albuns.csv"):
+    if os.path.isfile(caminho_db_albuns):
         pass
     else:
         campos = [
@@ -34,17 +49,17 @@ def criar_csv_albuns():
             "Preco",
             "Lista de Musicas",
         ]
-        with open("db_albuns.csv", "w", newline="") as file:
+        with open(caminho_db_albuns, "w", newline="") as file:
             escrever_csv = csv.writer(file, delimiter=",")
             escrever_csv.writerow(campos)
 
 # verifica se o ficheiro existe, caso nao exista cria bd dos users com os campos necessario
 def criar_csv_users():
-    if os.path.isfile("db_users.csv"):
+    if os.path.isfile(caminho_db_users):
         pass
     else:
         campos = ["user", "password"]
-        with open("db_users.csv", "w", newline="") as file:
+        with open(caminho_db_users, "w", newline="") as file:
             escrever_csv = csv.writer(file, delimiter=",")
             escrever_csv.writerow(campos)
 def criar_pasta_artistas():
@@ -62,7 +77,7 @@ def criar_pasta_artistas():
         
 # adicionar artista a db de artistas
 def adicionar_artista(nome, nacionalidade, direitos_editoriais):  
-    with open("db_artistas.csv", 'r', newline="",) as arquivo_csv:
+    with open(caminho_db_artistas, 'r', newline="",) as arquivo_csv:
         
         ler_csv = csv.reader(arquivo_csv)
         # avanca a primeira linha com o cabecalho
@@ -76,14 +91,15 @@ def adicionar_artista(nome, nacionalidade, direitos_editoriais):
             else:
                 ultimo_id = linha[0] 
                 id_artista = int(ultimo_id)+1
-            
+    albuns=""        
     campos = [
         id_artista,
         nome,
         nacionalidade,
         direitos_editoriais,
+        albuns
     ]
-    with open("db_artistas.csv", "a", newline="") as file:
+    with open(caminho_db_artistas, "a", newline="") as file:
         escrever_csv = csv.writer(file, delimiter=",")
         escrever_csv.writerow(campos)
 
@@ -111,15 +127,31 @@ def adicionar_album(id_artista, nome, genero_musical, data_lancamento, unidades_
         preco,
         lista_musicas,
     ]
-    with open("db_albuns.csv", "a", newline="") as file:
+    with open(caminho_db_albuns, "a", newline="") as file:
         escrever_csv = csv.writer(file, delimiter=",")
         escrever_csv.writerow(campos)
+    with open(caminho_db_artistas, "r") as file:
+        ler_csv = csv.reader(file)
+        next(ler_csv) #avanca a primeira linha com o cabecalho
+        for linha in ler_csv:
+            if linha[0]==id_artista:
+                nome_artista = linha[1]
+                break
+    nome_pasta = nome
+    # obter caminho da pasta atual
+    pasta_atual = os.getcwd()
+    # criar caminho completo para a pasta
+    caminho_pasta = os.path.join(pasta_atual,"artistas",nome_artista,nome_pasta)
+    # verificar se a pasta existe
+    if not os.path.exists(caminho_pasta):
+        # criar pasta
+        os.makedirs(caminho_pasta)
     atualizar_albuns_artista(id_artista, nome)
     
 
 # ao adicionar album na bd de albums, associa tambem o nome do album ao artista na bd de artistas 
 def atualizar_albuns_artista(id_artista, nomeAlbum):
-    with open("db_artistas.csv", "r", newline="") as file:
+    with open(caminho_db_artistas, "r", newline="") as file:
         ler_csv = csv.reader(file, delimiter=",")
         linhas = list(ler_csv)
     for linha in linhas:
@@ -129,7 +161,7 @@ def atualizar_albuns_artista(id_artista, nomeAlbum):
             else:
                 linha[-1] += "|" + nomeAlbum
 
-    with open("db_artistas.csv", "w", newline="") as file:
+    with open(caminho_db_artistas, "w", newline="") as file:
         escrever_csv = csv.writer(file, delimiter=",")
         escrever_csv.writerows(linhas)
 
@@ -137,7 +169,7 @@ def atualizar_albuns_artista(id_artista, nomeAlbum):
 # remover artista da db_artistas
 def remover_artista(id_artista):
     # Read the existing data
-    with open("db_artistas.csv", "r", newline="") as file:
+    with open(caminho_db_artistas, "r", newline="") as file:
         ler_csv = csv.reader(file)
         header = next(ler_csv)  # Save the header
         linhas = list(ler_csv)
@@ -150,14 +182,14 @@ def remover_artista(id_artista):
             break
 
     if index_a_remover == -1:
-        return "empty"
+        return None
 
     # Remove the line
     del linhas[index_a_remover]
 
     # Write back the modified data
-    with open("db_artistas.csv", "w", newline="") as file:
-        escrever_csv = csv.writer(file)
+    with open(caminho_db_artistas, "w", newline="") as file:
+        escrever_csv = csv.writer(file, delimiter=",")
         escrever_csv.writerow(header)  # Write back the header
         escrever_csv.writerows(linhas)
 
@@ -166,26 +198,26 @@ def remover_artista(id_artista):
 # remover albuns do artista da db_albuns
 def remover_albuns_artista(id_artista):
     linhas_a_remover = []
-    header = None  # Variable to store the header
+    header = None  # Variavel para guardar header
 
-    # Read existing data and find lines to remove
-    with open("db_albuns.csv", "r", newline="") as file:
+    # ler linhas
+    with open(caminho_db_albuns, "r", newline="") as file:
         leitor_csv = csv.reader(file)
-        header = next(leitor_csv)  # Save the header
+        header = next(leitor_csv)  # guardar header
         linhas = list(leitor_csv)
 
-    # Identify the index of the line to be removed
+    # identificar o index da linha a remover
     for idx, linha in enumerate(linhas):
         if linha[0] == id_artista:
             linhas_a_remover.append(idx)
 
-    # Remove lines from the data
+    # Remover linhas
     for index in reversed(linhas_a_remover):
         del linhas[index]
 
-    # Write back the modified data
-    with open("db_albuns.csv", "w", newline="") as file:
-        escritor_csv = csv.writer(file)
+    # escrever de volta as linhas 
+    with open(caminho_db_albuns, "w", newline="") as file:
+        escritor_csv = csv.writer(file, delimiter=",")
         escritor_csv.writerow(header)  # Write back the header
         escritor_csv.writerows(linhas)
 
@@ -196,10 +228,9 @@ def remover_album(id_artista,nome_album):
     existe = False
 
     # Lê os dados do arquivo CSV e os armazena na lista dados_csv
-    with open("db_artistas.csv", 'r') as file:
+    with open(caminho_db_artistas, 'r') as file:
         ler_csv = csv.DictReader(file)
-        next(ler_csv)
-        dados_csv = list(ler_csv)  # Populate dados_csv with the data read from the file
+        dados_csv = list(ler_csv)  
     
     # Procura o álbum a ser removido e o remove da lista
     for linha in dados_csv:
@@ -211,7 +242,7 @@ def remover_album(id_artista,nome_album):
             existe=True
 
     # Escreve os dados atualizados de volta no arquivo CSV
-    with open("db_artistas.csv", 'w', newline='') as file:
+    with open(caminho_db_artistas, 'w', newline='') as file:
         campos = ['ID', 'Nome', 'Nacionalidade', 'Direitos Editoriais', 'Albuns']
         escrever_csv = csv.DictWriter(file, fieldnames=campos)
         escrever_csv.writeheader()
@@ -220,40 +251,39 @@ def remover_album(id_artista,nome_album):
     # Lista para armazenar os dados do CSV
     dados_csv1 = []
     # Lê os dados do arquivo CSV e os armazena na lista dados_csv1
-    with open("db_albuns.csv", 'r') as file:
-        ler_csv = csv.DictReader(file)
-        next(ler_csv)
-        dados_csv1 = list(ler_csv)  # Populate dados_csv1 with the data read from the file
+    with open(caminho_db_albuns, 'r') as file1:
+        ler_csv1 = csv.DictReader(file1)
+        dados_csv1 = list(ler_csv1)  
 
     # Cria uma nova lista excluindo a linha com o ID_Artista e Nome correspondentes
     dados_csv1 = [linha for linha in dados_csv1 if linha['ID_Artista'] != id_artista or linha['Nome'] != nome_album]
 
     # Escreve os dados atualizados de volta no arquivo CSV
-    with open("db_albuns.csv", 'w', newline='') as file:
+    with open(caminho_db_albuns, 'w', newline='') as file1:
         campos = ['ID_Artista', 'Nome', 'Genero Musical', 'Data de Lancamento', 'Unidades Vendidas', 'Preco', 'Lista de Musicas']
-        escrever_csv = csv.DictWriter(file, fieldnames=campos)
+        escrever_csv = csv.DictWriter(file1, fieldnames=campos)
         escrever_csv.writeheader()
         escrever_csv.writerows(dados_csv1)
     if existe == False:
-        return "empty"
+        return None
 
 #pesquisar por palavras parecidas
 def pesquisa(tipo_pesquisa, search):
     resultados = []
-
+    ratio_pesquisa = 0.5
     if tipo_pesquisa == "artista":
-        with open("db_artistas.csv", "r", newline="") as file:
+        with open(caminho_db_artistas, "r", newline="") as file:
             ler_csv = csv.reader(file)
             next(ler_csv)
             linhas = list(ler_csv)
         for linha in linhas:
             if linha and len(linha) > 1:
                 palavra = linha[1]
-                if difflib.SequenceMatcher(None, search, palavra).ratio() > 0.5:
+                if difflib.SequenceMatcher(None, search, palavra).ratio() > ratio_pesquisa:
                     resultados.append(linha)
 
     elif tipo_pesquisa == "album" or tipo_pesquisa == "musica":
-        with open("db_albuns.csv", "r", newline="") as file:
+        with open(caminho_db_albuns, "r", newline="") as file:
             ler_csv = csv.reader(file)
             next(ler_csv)
             linhas = list(ler_csv)
@@ -262,16 +292,20 @@ def pesquisa(tipo_pesquisa, search):
             if linha and len(linha) > 1:
                 if tipo_pesquisa == "album":
                     palavra = linha[1]
-                elif tipo_pesquisa == "musica" and len(linha) > 6:
-                    palavras = linha[6].split("|")
-                    if any(difflib.SequenceMatcher(None, search, palavra).ratio() > 0.5 for palavra in palavras):
+                    if difflib.SequenceMatcher(None, search, palavra).ratio() > ratio_pesquisa:
                         resultados.append(linha)
+                elif tipo_pesquisa == "musica":
+                    palavras = linha[6].split("|")
+                    if any(difflib.SequenceMatcher(None, search, palavra).ratio() > ratio_pesquisa for palavra in palavras):
+                        resultados.append(linha)
+    if resultados == []:
+        resultados = None
 
     return resultados
 
 #devolver lista com todos os artistas
 def lista_artistas():
-    with open("db_artistas.csv", "r") as file:
+    with open(caminho_db_artistas, "r") as file:
         ler_csv = csv.reader(file)
         next(ler_csv) #avanca a primeira linha com o cabecalho
         lista = []
@@ -285,8 +319,10 @@ def lista_artistas():
 
 def calculoDireitosAutorais(idArtista,percentagem):
     #Ir buscar nrAlbuns vendidos, preco
+    global isLogged
+    if not isLogged: return "*****"
     total=0
-    with open("db_albuns.csv", "r") as file:
+    with open(caminho_db_albuns, "r") as file:
         ler_csv = csv.reader(file)
         next(ler_csv) #avanca a primeira linha com o cabecalho
         for linha in ler_csv:
@@ -294,12 +330,12 @@ def calculoDireitosAutorais(idArtista,percentagem):
                 total+=float(linha[4])*float(linha[5])
     direitosAutorais=float(total)*(float(percentagem)/100)
     #finalText = str(direitosAutorais)+"("+str(percentagem)+"%)"
-    return str(direitosAutorais)
+    return "("+str(percentagem)+"%) "+str(direitosAutorais)
 
 
 #devolver lista com todos os albuns de x artista
 def lista_albuns(id_artista):
-    with open("db_albuns.csv", "r") as file:
+    with open(caminho_db_albuns, "r") as file:
         ler_csv = csv.reader(file)
         next(ler_csv) #avanca a primeira linha com o cabecalho
         lista = []
@@ -309,60 +345,85 @@ def lista_albuns(id_artista):
             if linha[0]==id_artista:
                 id_existe = True
                 lista.append(linha)
-    if len(lista)==0 and id_existe==False: return "empty"
+    if len(lista)==0 and id_existe==False: return None
     else: return lista
 
 
 def criar_user(user,password):
-    with open("db_users.csv", "r") as file:
+    with open(caminho_db_users, "r") as file:
         ler_csv = csv.reader(file)
         next(ler_csv) #avanca a primeira linha com o cabecalho
         #verificar se existe algum user com o mesmo nome
         for linha in ler_csv:
-            if linha[0]==user:
-                return print("Ja existe um utilizador com esse nome!")
-    campos = [user,password]
-    with open("db_users.csv", "a", newline="") as file:
-        escrever_csv = csv.writer(file, delimiter=",")
-        escrever_csv.writerow(campos)
+            if len(linha) > 0 and linha[0] == user: 
+                return None
+            
+        campos = [user,password]
+        with open(caminho_db_users, "a", newline="") as file:
+            escrever_csv = csv.writer(file, delimiter=",")
+            escrever_csv.writerow(campos)
+global isLogged
+isLogged = False
+def login_user(user,password):
+    global isLogged
+    with open(caminho_db_users, "r") as file:
+        ler_csv = csv.reader(file)
+        next(ler_csv) #avanca a primeira linha com o cabecalho
+        #verificar se existe algum user com o mesmo nome e pass
+        for linha in ler_csv:
+            if len(linha) > 0 and linha[0] == user and linha[1] == password: 
+                isLogged = True
+                print(isLogged)
+                return True
+        return False
+
 
 def estatisticas():
     countArtistas=0
     countAlbuns=0
     countMusicas=0
-    with open("db_artistas.csv", "r") as file:
+    with open(caminho_db_artistas, "r") as file:
         ler_csv = csv.reader(file)
         next(ler_csv) #avanca a primeira linha com o cabecalho
         for linha in ler_csv:
             if len(linha)==0: break
             countArtistas+=1
-    with open("db_albuns.csv", "r") as file1:
+    with open(caminho_db_albuns, "r") as file1:
         ler_csv1 = csv.reader(file1)
         next(ler_csv1)
         for linha in ler_csv1:
             if len(linha)==0: break
             countAlbuns+=1
-            if len(linha)>6:
+            if linha[6] == "":
+                pass
+            else:
                 musicas = linha[6].split("|")
                 countMusicas += len(musicas)
     return countArtistas,countAlbuns,countMusicas 
 
-def check_if_exists(id_artista):
-     with open("db_artistas.csv", "r") as file:
+def check_if_exists_artista(id_artista):
+     with open(caminho_db_artistas, "r") as file:
         ler_csv = csv.reader(file)
         next(ler_csv) #avanca a primeira linha com o cabecalho
-        lista = []
         for linha in ler_csv:
-            if linha[0]==id_artista:
-                return True
+            if len(linha) > 0 and linha[0] == id_artista: return True
+        return False
+def check_if_exists_user(user):
+     with open(caminho_db_users, "r") as file:
+        ler_csv = csv.reader(file)
+        next(ler_csv) #avanca a primeira linha com o cabecalho
+        for linha in ler_csv:
+            if len(linha) > 0 and linha[0] == user: return True
         return False
 
 
 # Testes das funcoes:
+criar_pasta_database()     
 criar_csv_artistas()
 criar_csv_albuns()
 criar_csv_users()
 criar_pasta_artistas()
+
 
 
 #estatisticas()
