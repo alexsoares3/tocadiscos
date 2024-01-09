@@ -145,10 +145,6 @@ def listaArtistas(layout):
         border_style=tema["panel_border"],
     )
     if lista!=None:
-        #se a lista for maior que 20 aumenta o tamanho do layout para caberem todos os artistas
-        #vai ate 52 entradas, depois disso buga o layout
-        #if countArtistas>20: layout["main"].size = mainSize+(countArtistas-mainSize)+5
-
         table.add_column("ID", justify="center")
         table.add_column("Nome", justify="left",no_wrap=False)
         table.add_column("Nacionalidade", justify="center", style="green" )
@@ -297,6 +293,26 @@ def removerAlbum(live,layout,id_artista):
         mensagem_layout_indicar(live,layout, "Album nao foi removido")
         update_menu(layout,menu_lista_artistas())
         live.refresh()
+
+def gerirAlbum(id_artista,nome_album):
+    lista = lista_musicas(id_artista,nome_album)
+    table = Table(
+            show_lines=False,
+            box=box.SIMPLE,
+            border_style=tema["panel_border"]
+        )
+    table.add_column("Musicas", justify="center")
+    if lista != None:
+        for linha in lista:
+            table.add_row(linha)
+    else: table.add_row("Nenhuma musica adicionada")
+    return Panel(
+        Align.center(table),
+        border_style=tema["panel_border"],
+        title="[#feff6e]Lista de Musicas",
+    )
+
+
 
 def pesquisar(tipo_pesquisa,search):
     lista = pesquisa(tipo_pesquisa, search)
@@ -476,14 +492,44 @@ def main():
             if menu=="menu_gerir_artista": #opcoes do menu lista de artistas      
                 if event.event_type == kb.KEY_DOWN and (event.name == 'x' or event.name == 'X'): #gerir album
                     event.name=None
-                    pass
+                    nome_album = get_user_input(live,layout, "Qual o nome do album a gerir?")
+                    if check_if_exists_album(id,nome_album):
+                        update_listas(layout,gerirAlbum(id,nome_album))
+                        update_menu(layout,menu_gerir_album())
+                        live.refresh()
+                    else:
+                        mensagem_layout_indicar(live,layout, "O album inserido nao existe")
+                        update_menu(layout,menu_gerir_artista())
                 if event.event_type == kb.KEY_DOWN and (event.name == 'y' or event.name == 'Y'): #adicionar album
                     event.name=None
                     adicionarAlbum(live,layout,id)
+                    stats(layout)
                 if event.event_type == kb.KEY_DOWN and (event.name == 'z' or event.name == 'Z'): #remover album
                     event.name=None
                     removerAlbum(live,layout,id)
+                    stats(layout)
             
+            if menu=="menu_gerir_album": #opcoes do menu lista de artistas      
+                if event.event_type == kb.KEY_DOWN and (event.name == 'x' or event.name == 'X'): #adicionar musica
+                    event.name=None
+                    nome_musica = get_user_input(live,layout,"Qual o nome da musica a adicionar?")
+                    adicionar_musica_album(id,nome_album,nome_musica)
+                    mensagem_layout_indicar(live,layout,"Musica adicionada com sucesso")
+                    update_listas(layout,gerirAlbum(id,nome_album))
+                    stats(layout)
+                    live.refresh()
+                    
+                if event.event_type == kb.KEY_DOWN and (event.name == 'y' or event.name == 'Y'): #remover musica
+                    event.name=None
+                    nome_musica = get_user_input(live,layout,"Qual a musica a remover?")
+                    if remover_musica_album(id,nome_album,nome_musica) == False:
+                        mensagem_layout_indicar(live,layout,"Musica nao encontrada")
+                    else:
+                        mensagem_layout_indicar(live,layout,"Musica removida com sucesso")
+                    update_listas(layout,gerirAlbum(id,nome_album))
+                    stats(layout)
+                    live.refresh()
+                    
 
             if menu=="menu_pesquisar": #opcoes do menu lista de artistas 
                 if event.event_type == kb.KEY_DOWN and (event.name == 'x' or event.name == 'X'): #pesquisar por artista
@@ -495,7 +541,7 @@ def main():
                         mensagem_layout_indicar(live,layout, "Nenhum resultado encontrado")
                         live.refresh()
                 if event.event_type == kb.KEY_DOWN and (event.name == 'y' or event.name == 'Y'): #pesquisar por album
-                    search=get_user_input("Qual o album a pesquisar?")
+                    search=get_user_input(live,layout,"Qual o album a pesquisar?")
                     if pesquisa("album",search) != None:
                         update_listas(layout,pesquisar("album",search))
                         live.refresh()

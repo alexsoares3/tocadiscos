@@ -168,13 +168,12 @@ def atualizar_albuns_artista(id_artista, nomeAlbum):
 
 # remover artista da db_artistas
 def remover_artista(id_artista):
-    # Read the existing data
     with open(caminho_db_artistas, "r", newline="") as file:
         ler_csv = csv.reader(file)
-        header = next(ler_csv)  # Save the header
+        header = next(ler_csv) 
         linhas = list(ler_csv)
 
-    # Identify the index of the line to be removed
+    # identifica o index das linhas remover
     index_a_remover = -1
     for idx, linha in enumerate(linhas):
         if linha and linha[0] == id_artista:
@@ -183,14 +182,11 @@ def remover_artista(id_artista):
 
     if index_a_remover == -1:
         return None
-
-    # Remove the line
     del linhas[index_a_remover]
 
-    # Write back the modified data
     with open(caminho_db_artistas, "w", newline="") as file:
         escrever_csv = csv.writer(file, delimiter=",")
-        escrever_csv.writerow(header)  # Write back the header
+        escrever_csv.writerow(header)  
         escrever_csv.writerows(linhas)
 
     remover_albuns_artista(id_artista)
@@ -218,8 +214,52 @@ def remover_albuns_artista(id_artista):
     # escrever de volta as linhas 
     with open(caminho_db_albuns, "w", newline="") as file:
         escritor_csv = csv.writer(file, delimiter=",")
-        escritor_csv.writerow(header)  # Write back the header
+        escritor_csv.writerow(header)  
         escritor_csv.writerows(linhas)
+
+def remover_musica_album(id_artista,nome_album,nome_musica):
+    dados_csv = []
+    existe = False
+
+    # Lê os dados do arquivo CSV e os armazena na lista dados_csv
+    with open(caminho_db_albuns, "r", newline="") as file:
+        leitor_csv = csv.reader(file)
+        header = next(leitor_csv)  # guardar header
+        dados_csv = list(leitor_csv)  
+
+    for linha in dados_csv:
+        print(linha)
+        if linha[0] == id_artista and linha[1] == nome_album:
+            lista_musicas = linha[6].split('|')
+            if nome_musica in lista_musicas:
+                existe=True
+                lista_musicas.remove(nome_musica)
+            linha[6] = '|'.join(lista_musicas)  
+    
+    with open(caminho_db_albuns, "w", newline="") as file:
+        escritor_csv = csv.writer(file, delimiter=",")
+        escritor_csv.writerow(header)  
+        escritor_csv.writerows(dados_csv)
+    return existe
+
+def adicionar_musica_album(id_artista, nome_album, nova_musica):
+    dados_csv = []
+
+    # Lê os dados do arquivo CSV e os armazena na lista dados_csv
+    with open(caminho_db_albuns, "r", newline="") as file:
+        leitor_csv = csv.reader(file)
+        header = next(leitor_csv)  # guardar header
+        dados_csv = list(leitor_csv)
+
+    for linha in dados_csv:
+        if linha[0] == id_artista and linha[1] == nome_album:
+            lista_musicas = linha[6].split('|')
+            lista_musicas.append(nova_musica)
+            linha[6] = '|'.join(lista_musicas)
+    with open(caminho_db_albuns, "w", newline="") as file:
+        escritor_csv = csv.writer(file, delimiter=",")
+        escritor_csv.writerow(header)
+        escritor_csv.writerows(dados_csv)
 
 
 def remover_album(id_artista,nome_album):
@@ -232,7 +272,7 @@ def remover_album(id_artista,nome_album):
         ler_csv = csv.DictReader(file)
         dados_csv = list(ler_csv)  
     
-    # Procura o álbum a ser removido e o remove da lista
+    # Procura o álbum a ser removido e remove-o da lista
     for linha in dados_csv:
         if linha['ID'] == id_artista and nome_album in linha['Albuns']:
             # Remove o álbum da lista
@@ -240,6 +280,8 @@ def remover_album(id_artista,nome_album):
             albuns.remove(nome_album)
             linha['Albuns'] = '|'.join(albuns)
             existe=True
+    if existe == False:
+        return None
 
     # Escreve os dados atualizados de volta no arquivo CSV
     with open(caminho_db_artistas, 'w', newline='') as file:
@@ -264,8 +306,7 @@ def remover_album(id_artista,nome_album):
         escrever_csv = csv.DictWriter(file1, fieldnames=campos)
         escrever_csv.writeheader()
         escrever_csv.writerows(dados_csv1)
-    if existe == False:
-        return None
+    
 
 #pesquisar por palavras parecidas
 def pesquisa(tipo_pesquisa, search):
@@ -313,8 +354,7 @@ def lista_artistas():
             linha[3]=calculoDireitosAutorais(linha[0],linha[3])
             lista.append(linha)
     if len(lista)==0:
-        lista="empty"
-        return lista
+        return None
     else: return lista
 
 def calculoDireitosAutorais(idArtista,percentagem):
@@ -341,13 +381,24 @@ def lista_albuns(id_artista):
         lista = []
         id_existe = False
         for linha in ler_csv:
-            print(linha[0])
             if linha[0]==id_artista:
                 id_existe = True
                 lista.append(linha)
     if len(lista)==0 and id_existe==False: return None
     else: return lista
 
+def lista_musicas(id_artista,nome_album):
+    lista_musicas = []
+    with open(caminho_db_albuns, 'r', newline='') as file:
+        ler_csv = csv.reader(file)
+        for linha in ler_csv:
+            if linha[0] == id_artista and linha[1] == nome_album:
+                lista_musicas = linha[6].split('|')
+                if len(lista_musicas) == 0:
+                    return None
+                return lista_musicas
+
+print(lista_musicas("1","Album1"))    
 
 def criar_user(user,password):
     with open(caminho_db_users, "r") as file:
@@ -419,6 +470,14 @@ def check_if_exists_user(user):
         next(ler_csv) #avanca a primeira linha com o cabecalho
         for linha in ler_csv:
             if len(linha) > 0 and linha[0] == user: return True
+        return False
+def check_if_exists_album(id_artista, nome_album):
+    with open(caminho_db_albuns, "r") as file:
+        ler_csv = csv.reader(file)
+        next(ler_csv) 
+        for linha in ler_csv:
+            if len(linha) > 0 and linha[0] == id_artista and linha[1] == nome_album:
+                return True
         return False
 
 
